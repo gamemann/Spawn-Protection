@@ -1,0 +1,34 @@
+"Phrases"
+{
+	// The tag infront of each message.
+	"Tag"
+	{
+		"en"	"{darkred}[SP]"
+	}
+	
+	// Announced when you are protected.
+	"Protected"
+	{
+		"en"	"{default}You are now protected!"
+	}	
+	
+	// Announced when you are not protected anymore.
+	"NotProtected"
+	{
+		"en"	"{default}You are no longer protected!"
+	}	
+	
+	// Sent when the victim is AFK.
+	// %s = The victim's username.
+	"IsAFK"
+	{
+		"en"	"{lightgreen}%s {default}is AFK!"
+	}	
+	
+	// Sent when the victim is protected.
+	// %s = The victim's username.
+	"IsProtected"
+	{
+		"en"	"{lightgreen}%s {default}is protected!"
+	}
+}
