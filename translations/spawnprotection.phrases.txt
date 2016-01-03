@@ -19,16 +19,18 @@
 	}	
 	
 	// Sent when the victim is AFK.
-	// %s = The victim's username.
 	"IsAFK"
 	{
-		"en"	"{lightgreen}%s {default}is AFK!"
+		// 1: The client's username.
+		"#format"	"{1:N}"
+		"en"		"{lightgreen}{1} {default}is AFK!"
 	}	
 	
 	// Sent when the victim is protected.
-	// %s = The victim's username.
 	"IsProtected"
 	{
-		"en"	"{lightgreen}%s {default}is protected!"
+		// 1: The client's username.
+		"#format"	"{1:N}"
+		"en"		"{lightgreen}{1} {default}is protected!"
 	}
 }

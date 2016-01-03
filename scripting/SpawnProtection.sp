@@ -209,12 +209,6 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
 		// If it is, they are protected and we need to set fDamage to 0.0.
 		fDamage = 0.0;
 		
-		// Get the victim's username string.
-		char sUser[MAX_NAME_LENGTH];
-		
-		// Get the victim's username.
-		GetClientName(iVictim, sUser, sizeof(sUser));
-		
 		// Check if the attacker is valid.
 		if (iAttacker > 0 && iAttacker <= MaxClients && IsClientInGame(iAttacker)) 
 		{
@@ -222,12 +216,12 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
 			if (g_bAFK[iVictim]) 
 			{
 				// Print to chat! (victim is AFK)
-				CPrintToChat(iAttacker, "%t%t", "Tag", "IsAFK", sUser);
+				CPrintToChat(iAttacker, "%t%t", "Tag", "IsAFK", iVictim);
 			} 
 			else 
 			{
 				// Print to chat! (victim is protected but not AFK)
-				CPrintToChat(iAttacker, "%t%t", "Tag", "IsProtected", sUser);
+				CPrintToChat(iAttacker, "%t%t", "Tag", "IsProtected", iVictim);
 			}
 		}
 		
