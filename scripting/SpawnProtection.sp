@@ -1,7 +1,9 @@
 #include <sourcemod>
 #include <sdkhooks>
 #include <sdktools>
+#include <clientprefs>
 #include <multicolors>
+#include <RSP>
 
 #define MAX_BUTTONS 25
 
@@ -10,32 +12,50 @@ public Plugin myinfo =
 	name = "Spawn Protection",
 	author = "Roy (Christian Deacon)",
 	description = "Advanced spawn protection.",
-	version = "1.0",
-	url = "GFLClan.com & TheDevelopingCommunity.com & alliedmods.net"
+	version = "1.1",
+	url = "GFLClan.com & AlliedMods.net"
 };
 
-// Bools for the client
+/* Bools for the client */
 bool g_bProtected[MAXPLAYERS+1];
 bool g_bAFK[MAXPLAYERS+1];
 bool g_bFTimer[MAXPLAYERS+1];
+bool g_bNotify[MAXPLAYERS+1];
 
-// ConVars
+/* ConVars */
 Handle g_hAnnounce = null;
 Handle g_hTime = null;
 Handle g_hWeaponShoot = null;
 
-// ConVar Values
+/* ConVar Values */
 bool g_bAnnounce;
 float g_fTime
 bool g_bWeaponShoot;
 
+/* Client Cookies */
+Handle g_hClientCookie = null;
+
+public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] sErr, int iErrMax)
+{
+	// Register the plugin's library.
+	RegPluginLibrary("RSP");
+	
+	// Register the isSpawnProtected native.
+	CreateNative("IsSpawnProtected", Native_IsSpawnProtected);
+	
+	// Register the notifyAttacker native.
+	CreateNative("NotifyAttacker", Native_NotifyAttacker);
+	
+	return APLRes_Success;
+}
+
 public void OnPluginStart() 
 {
-	// Events
+	/* Events */
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("weapon_fire", Event_WeaponFire);
 	
-	// ConVars
+	/* ConVars */
 	g_hAnnounce = CreateConVar("sm_sp_announce", "1", "Announce when the user is and is not protected?");
 	HookConVarChange(g_hAnnounce, CVarChanged);
 	
@@ -45,11 +65,36 @@ public void OnPluginStart()
 	g_hWeaponShoot = CreateConVar("sm_sp_on_fire", "1", "If 1, even if the user is in the \"sm_roy_sp_time\" immunity, if they fire, it will remove spawn protection");
 	HookConVarChange(g_hWeaponShoot, CVarChanged);
 	
-	// Translations
+	/* Commands. */
+	RegConsoleCmd("sm_rspnotify", Command_Notify);
+	
+	/* Client cookie. */
+	g_hClientCookie = RegClientCookie("rsp_notify", "RSP Notify", CookieAccess_Protected);
+	
+	/* Translations */
 	LoadTranslations("spawnprotection.phrases.txt");
 	
-	// Config
+	/* Config */
 	AutoExecConfig(true, "plugin.spawnprotection");
+	
+	/* Late loading. */
+	for (int i = MaxClients; i > 0; --i)
+	{
+		if (!AreClientCookiesCached(i))
+		{
+			continue;
+		}
+		
+		OnClientCookiesCached(i);
+	}
+}
+
+public void OnClientCookiesCached(int iClient)
+{
+	char sValue[8];
+	GetClientCookie(iClient, g_hClientCookie, sValue, sizeof(sValue));
+	
+	g_bNotify[iClient] = ((sValue[0] == '\0') || (sValue[0] != '\0' && StringToInt(sValue) > 0));
 }
 
 public void OnConfigsExecuted()
@@ -65,6 +110,26 @@ public void CVarChanged(Handle hCVar, const char[] sOldV, const char[] sNewV)
 	OnConfigsExecuted();
 }
 
+/* Commands. */
+public Action Command_Notify(int iClient, int iArgs)
+{
+	if (g_bNotify[iClient])
+	{
+		g_bNotify[iClient] = false;
+		SetClientCookie(iClient, g_hClientCookie, "0");
+		CReplyToCommand(iClient, "%t%t", "Tag", "NotifyDisabled");
+	}
+	else
+	{
+		g_bNotify[iClient] = true;
+		SetClientCookie(iClient, g_hClientCookie, "1");
+		CReplyToCommand(iClient, "%t%t", "Tag", "NotifyEnabled");
+	}
+	
+	return Plugin_Handled;
+}
+
+/* Events */
 // Event: Player Spawn
 public Action Event_PlayerSpawn(Event eEvent, const char[] sName, bool bDontBroadcast) 
 {
@@ -80,7 +145,7 @@ public Action Event_PlayerSpawn(Event eEvent, const char[] sName, bool bDontBroa
 	if (g_bAnnounce) 
 	{
 		// Make sure the client is valid.
-		if (iClient > 0 && iClient <= MaxClients && IsClientInGame(iClient)) 
+		if (iClient > 0 && iClient <= MaxClients && IsClientInGame(iClient) && g_bNotify[iClient]) 
 		{
 			// Print to chat!
 			CPrintToChat(iClient, "%t%t", "Tag", "Protected");
@@ -91,34 +156,7 @@ public Action Event_PlayerSpawn(Event eEvent, const char[] sName, bool bDontBroa
 	CreateTimer(g_fTime, DisableProtection, iClient, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-// Player Spawn timer to disable protection!
-public Action DisableProtection(Handle hTimer, any iClient) 
-{
-	// Check if they are still protected and if the client is valid.
-	if (g_bFTimer[iClient] && iClient > 0 && iClient <= MaxClients && IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) > 1) 
-	{
-		// Set the "ftimer" protection to false.
-		g_bFTimer[iClient] = false;
-		
-		// If they aren't protected (non-AFK), which means they are able to get damaged, announce they are no longer protected (if the ConVar is enabled)
-		if (!g_bProtected[iClient]) 
-		{
-			// Check whether the ConVar is enabled or not.
-			if (g_bAnnounce) 
-			{
-				// Print to the chat!
-				CPrintToChat(iClient, "%t%t", "Tag", "NotProtected");
-			}
-		} 
-		else 
-		{
-			// The user must be AFK, set "g_bAFK" to true.
-			g_bAFK[iClient] = true;
-		}
-	}
-}
-
-// Weapon Fire Event!
+// Event: Weapon Fire.
 public Action Event_WeaponFire(Event eEvent, const char[] sName, bool bDontBroadcast) 
 {
 	// Get the client index.
@@ -145,7 +183,7 @@ public Action Event_WeaponFire(Event eEvent, const char[] sName, bool bDontBroad
 			}
 			
 			// Announce they are no longer protected (if the ConVar is enabled and they are actually no longer protected)
-			if (g_bAnnounce && !g_bProtected[iClient] && !g_bFTimer[iClient]) 
+			if (g_bAnnounce && !g_bProtected[iClient] && !g_bFTimer[iClient] && g_bNotify[iClient]) 
 			{
 				// Print to chat!
 				CPrintToChat(iClient, "%t%t", "Tag", "NotProtected");
@@ -157,6 +195,34 @@ public Action Event_WeaponFire(Event eEvent, const char[] sName, bool bDontBroad
 		{
 			// Set "g_bAFK" to false (since they fired).
 			g_bAFK[iClient] = false;
+		}
+	}
+}
+
+/* Timers */
+// Timer: Player Spawn timer to disable protection!
+public Action DisableProtection(Handle hTimer, any iClient) 
+{
+	// Check if they are still protected and if the client is valid.
+	if (g_bFTimer[iClient] && iClient > 0 && iClient <= MaxClients && IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) > 1) 
+	{
+		// Set the "ftimer" protection to false.
+		g_bFTimer[iClient] = false;
+		
+		// If they aren't protected (non-AFK), which means they are able to get damaged, announce they are no longer protected (if the ConVar is enabled)
+		if (!g_bProtected[iClient]) 
+		{
+			// Check whether the ConVar is enabled or not.
+			if (g_bAnnounce && g_bNotify[iClient]) 
+			{
+				// Print to the chat!
+				CPrintToChat(iClient, "%t%t", "Tag", "NotProtected");
+			}
+		} 
+		else 
+		{
+			// The user must be AFK, set "g_bAFK" to true.
+			g_bAFK[iClient] = true;
 		}
 	}
 }
@@ -190,7 +256,7 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float fV
 				g_bAFK[iClient] = false;
 				
 				// Announce they are no longer protected (if the ConVar is enabled and "ftimer" is false)
-				if (g_bAnnounce && !g_bFTimer[iClient]) 
+				if (g_bAnnounce && !g_bFTimer[iClient] && g_bNotify[iClient]) 
 				{
 					// Print to chat!
 					CPrintToChat(iClient, "%t%t", "Tag", "NotProtected");
@@ -212,17 +278,7 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
 		// Check if the attacker is valid.
 		if (iAttacker > 0 && iAttacker <= MaxClients && IsClientInGame(iAttacker)) 
 		{
-			// Check if "afk" is true for the victim.
-			if (g_bAFK[iVictim]) 
-			{
-				// Print to chat! (victim is AFK)
-				CPrintToChat(iAttacker, "%t%t", "Tag", "IsAFK", iVictim);
-			} 
-			else 
-			{
-				// Print to chat! (victim is protected but not AFK)
-				CPrintToChat(iAttacker, "%t%t", "Tag", "IsProtected", iVictim);
-			}
+			NotifyAttacker(iAttacker, iVictim);
 		}
 		
 		// Return the plugin changed values.
@@ -231,4 +287,50 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
     
 	// Allow other plugins to execute "OnTakeDamage".
 	return Plugin_Continue;
+}
+
+/* Natives */
+// Native: IsSpawnProtected (returns true if the player is spawn protected).
+public int Native_IsSpawnProtected(Handle hPlugin, int iNumParams)
+{
+	int iClient = GetNativeCell(1);
+	
+	if (IsClientInGame(iClient) && (g_bProtected[iClient] || g_bFTimer[iClient]))
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+// Native: NotifyUser (Sends a message to the attacker saying the victim is AFK).
+public int Native_NotifyAttacker(Handle hPlugin, int iNumParams)
+{
+	int iAttacker = GetNativeCell(1);
+	int iVictim = GetNativeCell(2);
+	
+	if (!IsClientInGame(iAttacker) || !IsClientInGame(iVictim))
+	{
+		return false;
+	}
+	
+	// Check if the attacker has notifications enabled.
+	if (!g_bNotify[iAttacker])
+	{
+		return false;
+	}
+	
+	// Check if "afk" is true for the victim.
+	if (g_bAFK[iVictim]) 
+	{
+		// Print to chat! (victim is AFK)
+		CPrintToChat(iAttacker, "%t%t", "Tag", "IsAFK", iVictim);
+	} 
+	else 
+	{
+		// Print to chat! (victim is protected but not AFK)
+		CPrintToChat(iAttacker, "%t%t", "Tag", "IsProtected", iVictim);
+	}
+	
+	return true;
 }

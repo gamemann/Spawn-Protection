@@ -32,5 +32,18 @@
 		// 1: The client's username.
 		"#format"	"{1:N}"
 		"en"		"{lightgreen}{1} {default}is protected!"
-	}
+	}	
+	
+	// When the client disables notifications.
+	"NotifyDisabled"
+	{
+		"en"	"{default}Notifications are {lightred}disabled{default}!"
+	}	
+	
+	// When the client enables notifications.
+	"NotifyEnabled"
+	{
+		"en"	"{default}Notifications are {lightgreen}enabled{default}!"
+	}	
+	
 }
