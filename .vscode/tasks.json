@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0",
+    "options": 
+    {
+        "env": 
+        {
+            "sm_path": "/home/dev/GFL/SourceMod/scripting"
+        }
+    },
+    "tasks": 
+    [
+        {
+            "label": "sourcepawn",
+            "type": "shell",
+            "command": "$sm_path/spcomp64 ${file} -D ${workspaceFolder} -i ${workspaceFolder}/scripting/include -i $sm_path/include"
+        }
+    ]
+}
