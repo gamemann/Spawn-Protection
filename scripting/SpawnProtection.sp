@@ -23,9 +23,9 @@ bool g_bFTimer[MAXPLAYERS+1];
 bool g_bNotify[MAXPLAYERS+1];
 
 /* ConVars */
-Handle g_hAnnounce = null;
-Handle g_hTime = null;
-Handle g_hWeaponShoot = null;
+ConVar g_hAnnounce = null;
+ConVar g_hTime = null;
+ConVar g_hWeaponShoot = null;
 
 /* ConVar Values */
 bool g_bAnnounce;
