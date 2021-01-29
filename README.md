@@ -1,6 +1,6 @@
 # Spawn Protection
 ## Description
-A simple Spawn Protection addon that was developed for Counter-Strike: Source and Counter-Strike: Global Offensive, but should work in other games. What's neat about this plugin is it uses SDKHooks to block damage and includes an option to stop spawn protection when the victim fires their weapon.
+A simple SourceMod Spawn Protection plugin that was developed for Counter-Strike: Source and Counter-Strike: Global Offensive, but should work in other games as well. What's neat about this plugin is it uses SDKHooks to block damage and includes an option to stop spawn protection when the victim fires their weapon.
 
 ## ConVars
 * **sm_sp_announce** - When enabled, the attacker will receive chat messages (if enabled per client) that the victim is AFK (Default 1).
