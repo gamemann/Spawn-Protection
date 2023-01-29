@@ -123,13 +123,13 @@ public Action Command_Notify(int iClient, int iArgs)
 	{
 		g_bNotify[iClient] = false;
 		SetClientCookie(iClient, g_hClientCookie, "0");
-		CReplyToCommand(iClient, "%t%t", "Tag", "NotifyDisabled");
+		CReplyToCommand(iClient, "%t %t", "Tag", "NotifyDisabled");
 	}
 	else
 	{
 		g_bNotify[iClient] = true;
 		SetClientCookie(iClient, g_hClientCookie, "1");
-		CReplyToCommand(iClient, "%t%t", "Tag", "NotifyEnabled");
+		CReplyToCommand(iClient, "%t %t", "Tag", "NotifyEnabled");
 	}
 	
 	return Plugin_Handled;
@@ -154,7 +154,7 @@ public Action Event_PlayerSpawn(Event eEvent, const char[] sName, bool bDontBroa
 		if (iClient > 0 && iClient <= MaxClients && IsClientInGame(iClient) && g_bNotify[iClient]) 
 		{
 			// Print to chat!
-			CPrintToChat(iClient, "%t%t", "Tag", "Protected");
+			CPrintToChat(iClient, "%t %t", "Tag", "Protected");
 		}
 	}
 	
@@ -194,7 +194,7 @@ public Action Event_WeaponFire(Event eEvent, const char[] sName, bool bDontBroad
 			if (g_bAnnounce && !g_bProtected[iClient] && !g_bFTimer[iClient] && g_bNotify[iClient]) 
 			{
 				// Print to chat!
-				CPrintToChat(iClient, "%t%t", "Tag", "NotProtected");
+				CPrintToChat(iClient, "%t %t", "Tag", "NotProtected");
 			}
 		}
 		
@@ -232,7 +232,7 @@ public Action DisableProtection(Handle hTimer, any iClient)
 			if (g_bAnnounce && g_bNotify[iClient]) 
 			{
 				// Print to the chat!
-				CPrintToChat(iClient, "%t%t", "Tag", "NotProtected");
+				CPrintToChat(iClient, "%t %t", "Tag", "NotProtected");
 			}
 		} 
 		else
@@ -277,7 +277,7 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float fV
 				if (g_bAnnounce && !g_bFTimer[iClient] && g_bNotify[iClient]) 
 				{
 					// Print to chat!
-					CPrintToChat(iClient, "%t%t", "Tag", "NotProtected");
+					CPrintToChat(iClient, "%t %t", "Tag", "NotProtected");
 				}
 			}
 		}
@@ -344,12 +344,12 @@ public int Native_NotifyAttacker(Handle hPlugin, int iNumParams)
 	if (g_bAFK[iVictim]) 
 	{
 		// Print to chat! (victim is AFK)
-		CPrintToChat(iAttacker, "%t%t", "Tag", "IsAFK", iVictim);
+		CPrintToChat(iAttacker, "%t %t", "Tag", "IsAFK", iVictim);
 	} 
 	else 
 	{
 		// Print to chat! (victim is protected but not AFK)
-		CPrintToChat(iAttacker, "%t%t", "Tag", "IsProtected", iVictim);
+		CPrintToChat(iAttacker, "%t %t", "Tag", "IsProtected", iVictim);
 	}
 	
 	return true;
