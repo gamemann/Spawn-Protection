@@ -160,6 +160,8 @@ public Action Event_PlayerSpawn(Event eEvent, const char[] sName, bool bDontBroa
 	
 	// Create the timer to disable protection.
 	CreateTimer(g_fTime, DisableProtection, iClient, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
 }
 
 // Event: Weapon Fire.
@@ -203,6 +205,8 @@ public Action Event_WeaponFire(Event eEvent, const char[] sName, bool bDontBroad
 			g_bAFK[iClient] = false;
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 /* Timers */
@@ -237,6 +241,8 @@ public Action DisableProtection(Handle hTimer, any iClient)
 			g_bAFK[iClient] = true;
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 // On Client Put In Server (once they connect)
@@ -276,6 +282,8 @@ public Action OnPlayerRunCmd(int iClient, int &iButtons, int &iImpulse, float fV
 			}
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 // The "OnTakeDamage" SDKHook.
