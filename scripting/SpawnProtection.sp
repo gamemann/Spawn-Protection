@@ -26,11 +26,13 @@ bool g_bNotify[MAXPLAYERS+1];
 ConVar g_hAnnounce = null;
 ConVar g_hTime = null;
 ConVar g_hWeaponShoot = null;
+ConVar g_hExcludeAFK = null;
 
 /* ConVar Values */
 bool g_bAnnounce;
 float g_fTime
 bool g_bWeaponShoot;
+bool g_bExcludeAFK;
 
 /* Client Cookies */
 Handle g_hClientCookie = null;
@@ -64,6 +66,9 @@ public void OnPluginStart()
 	
 	g_hWeaponShoot = CreateConVar("sm_sp_on_fire", "1", "If 1, even if the user is in the \"sm_roy_sp_time\" immunity, if they fire, it will remove spawn protection");
 	HookConVarChange(g_hWeaponShoot, CVarChanged);
+
+	g_hExcludeAFK = CreateConVar("sm_sp_exclude_afk", "0", "If 1, users who are AFK will not be spawn protected.");
+	HookConVarChange(g_hExcludeAFK, CVarChanged);
 	
 	/* Commands. */
 	RegConsoleCmd("sm_rspnotify", Command_Notify);
@@ -103,6 +108,7 @@ public void OnConfigsExecuted()
 	g_bAnnounce = GetConVarBool(g_hAnnounce);
 	g_fTime = GetConVarFloat(g_hTime);
 	g_bWeaponShoot = GetConVarBool(g_hWeaponShoot);
+	g_bExcludeAFK = GetConVarBool(g_hExcludeAFK);
 }
 
 public void CVarChanged(Handle hCVar, const char[] sOldV, const char[] sNewV)
@@ -210,8 +216,14 @@ public Action DisableProtection(Handle hTimer, any iClient)
 		g_bFTimer[iClient] = false;
 		
 		// If they aren't protected (non-AFK), which means they are able to get damaged, announce they are no longer protected (if the ConVar is enabled)
-		if (!g_bProtected[iClient]) 
+		if (!g_bProtected[iClient] || g_bExcludeAFK) 
 		{
+			// We shouldn't be protected.
+			if (g_bProtected[iClient])
+			{
+				g_bProtected[iClient] = false;
+			}
+
 			// Check whether the ConVar is enabled or not.
 			if (g_bAnnounce && g_bNotify[iClient]) 
 			{
@@ -219,7 +231,7 @@ public Action DisableProtection(Handle hTimer, any iClient)
 				CPrintToChat(iClient, "%t%t", "Tag", "NotProtected");
 			}
 		} 
-		else 
+		else
 		{
 			// The user must be AFK, set "g_bAFK" to true.
 			g_bAFK[iClient] = true;
