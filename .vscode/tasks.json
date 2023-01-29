@@ -4,7 +4,7 @@
     {
         "env": 
         {
-            "sm_path": "/home/dev/GFL/SourceMod/scripting"
+            "sm_path": "/home/dev/sourcemod/scripting"
         }
     },
     "tasks": 
