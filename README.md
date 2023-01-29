@@ -6,6 +6,7 @@ A simple SourceMod Spawn Protection plugin that was developed for Counter-Strike
 * **sm_sp_announce** - When enabled, the attacker will receive chat messages (if enabled per client) that the victim is protected (Default 1).
 * **sm_sp_time** - The amount of time to protect each player on spawn (Default 5.0).
 * **sm_sp_on_fire** - When enabled, if the victim fires their weapon before the spawn protection time runs out, it will remove their protection (Default 1).
+* **sm_sp_exclude_afk** - If `1`, users who are AFK will not be spawn protected.
 
 ## Commands
 * **sm_rspnotify** - This toggles protected notifications per attacker/client via client cookies.
