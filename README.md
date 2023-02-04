@@ -1,4 +1,5 @@
-# Spawn Protection
+[![Banner](banner.png)](https://bestmods.io/view/cs-spawnprotection/)
+
 ## Description
 A simple SourceMod Spawn Protection plugin that was developed for Counter-Strike: Source and Counter-Strike: Global Offensive, but should work in other games as well. What's neat about this plugin is it uses SDKHooks to block damage and includes an option to stop spawn protection when the victim fires their weapon.
 
